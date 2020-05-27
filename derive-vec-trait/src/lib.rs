@@ -1,4 +1,4 @@
 
-pub trait VecLike<T> {
-    fn new() -> Self;
+pub trait VecTrait<T> {
+    fn push(&mut self, val: T);
 }

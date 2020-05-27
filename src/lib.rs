@@ -3,7 +3,7 @@
 use quote::quote;
 use syn::{Data, DeriveInput, Field, Fields, Ident};
 
-#[proc_macro_derive(VecLike, attributes(vec))]
+#[proc_macro_derive(VecBehavior, attributes(vec))]
 pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
@@ -13,14 +13,35 @@ pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         Data::Struct(data_struct) => data_struct,
         _ => panic!("#[derive(DataFrame)] only supported for structs"),
     };
-    let field = data.fields
+
+    let field = decorated_field(&data.fields);
+    let inner_vec_ident = vec_inner_type(&field.ty);
+    let field_name = field
+        .ident
+        .as_ref()
+        .unwrap_or_else(|| todo!("#[vec] required on named fields"));
+
+    (quote! {
+        impl VecTrait<#inner_vec_ident> for #struct_ident {
+            fn push(&mut self, val: #inner_vec_ident) {
+                self.#field_name.push(val)
+            }
+        }
+
+    })
+    .into()
+}
+
+// Find the field which as been decorated with #[vec] to
+// denote which attribute to treat as the Vec
+fn decorated_field(fields: &syn::Fields) -> &syn::Field {
+    fields
         .iter()
         .filter(|field| {
-        field
-            .attrs
-            .iter()
-            .filter(|attr| {
-                match attr.parse_meta() {
+            field
+                .attrs
+                .iter()
+                .filter(|attr| match attr.parse_meta() {
                     Ok(meta) => {
                         if let syn::Meta::Path(path) = meta {
                             path.segments
@@ -29,75 +50,44 @@ pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         } else {
                             false
                         }
-                    },
-                    Err(_) => false
-                }
-            })
-            .nth(0)
-            .is_some()
+                    }
+                    Err(_) => false,
+                })
+                .nth(0)
+                .is_some()
         })
         .nth(0)
-        .unwrap_or_else(|| panic!("Expected one attribute to have #[vec]"));
-
-    dbg!(&field);
-
-    // generate methods
-    let fn_new = vec::new();
-    let pub_fn_len = vec::len();
-    let pub_fn_push = vec::push(&struct_ident);
-    let pub_fn_remove = vec::remove(&struct_ident);
-    let pub_fn_is_empty = vec::is_empty();
-
-    (quote! {}).into()
+        .unwrap_or_else(|| panic!("Expected one attribute to have #[vec]"))
 }
 
-mod vec {
-
-    #![allow(unused_imports, dead_code)]
-
-    use proc_macro2::TokenStream;
-    use quote::{format_ident, quote};
-    use syn::{FieldsNamed, Ident};
-
-    /// Generate `DataFrame::push(row)` method
-    pub fn new() -> TokenStream {
-        quote! {
-            fn new() -> Self {
-                Self::default()
+// Get the inner ident from a Vec type. ie: `T` from `Vec<T>`
+fn vec_inner_type(ty: &syn::Type) -> Ident {
+    match ty {
+        syn::Type::Path(path) => {
+            let v = &path.path.segments.iter().nth(0).unwrap();
+            if &v.ident.to_string() != "Vec" {
+                panic!("#[vec] attribute must be a Vec<..> type")
+            }
+            match &v.arguments {
+                syn::PathArguments::AngleBracketed(vec_args) => {
+                    match &vec_args.args.iter().nth(0).unwrap() {
+                        syn::GenericArgument::Type(ty) => {
+                            match &ty {
+                                syn::Type::Path(type_path) => {
+                                    // This is the ie 'T' of a Vec<T>
+                                    type_path.path.segments.iter().nth(0).unwrap().ident.clone()
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        _ => {
+                            unreachable!("Appears attribute's Vec<> doesn't contain an inner type?")
+                        }
+                    }
+                }
+                _ => unreachable!("Appears attribute's `Vec` doesn't contain angle brackets?"),
             }
         }
-    }
-
-    pub fn is_empty() -> TokenStream {
-        quote! {
-            pub fn is_empty(&self) -> bool {
-                self.values.len() == 0
-            }
-        }
-    }
-
-    /// Generate `DataFrame::push(row)` method
-    pub fn push(row_ident: &Ident) -> TokenStream {
-        quote! {
-            pub fn push(&mut self, row: #row_ident) {
-                self.values.push(row)
-            }
-        }
-    }
-
-    pub fn len() -> TokenStream {
-        quote! {
-            pub fn len(&self) -> usize {
-                self.values.len()
-            }
-        }
-    }
-
-    pub fn remove(row_ident: &Ident) -> TokenStream {
-        quote! {
-            pub fn remove(&mut self, idx: usize) -> #row_ident {
-                self.values.remove(idx)
-            }
-        }
+        _ => panic!("Only Vec<..> types supported for a #[vec] attribute"),
     }
 }
