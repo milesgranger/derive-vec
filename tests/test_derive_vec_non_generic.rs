@@ -1,5 +1,4 @@
-use derive_vec::VecBehavior;
-use derive_vec_trait::VecTrait;
+use derive_vec::{VecBehavior, VecTrait};
 
 #[derive(VecBehavior, Default)]
 struct Foo {
