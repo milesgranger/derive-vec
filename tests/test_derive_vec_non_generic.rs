@@ -18,3 +18,10 @@ fn test_push() {
     foo.push(1);
     assert_eq!(foo.values.len(), 1);
 }
+
+#[test]
+fn test_append() {
+    let mut foo = Foo::default();
+    foo.append(&mut vec![1, 2, 3]);
+    assert_eq!(foo.values.len(), 3);
+}
