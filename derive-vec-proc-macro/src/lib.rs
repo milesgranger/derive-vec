@@ -27,8 +27,26 @@ pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             fn as_slice(&self) -> &[#inner_vec_ident] {
                 self.#field_name.as_slice()
             }
+            fn capacity(&self) -> usize {
+                self.#field_name.capacity()
+            }
+            fn clear(&mut self) {
+                self.#field_name.clear()
+            }
+            fn len(&self) -> usize {
+                self.#field_name.len()
+            }
+            fn is_empty(&self) -> bool {
+                self.#field_name.is_empty()
+            }
             fn push(&mut self, val: #inner_vec_ident) {
                 self.#field_name.push(val)
+            }
+            fn with_capacity(capacity: usize) -> Self {
+                Self {
+                    #field_name: Vec::with_capacity(capacity),
+                    ..Self::default()
+                }
             }
         }
 

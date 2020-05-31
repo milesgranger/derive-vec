@@ -32,3 +32,28 @@ fn test_slice() {
     foo.append(&mut vec![1, 2, 3]);
     assert_eq!(foo.as_slice(), &[1, 2, 3]);
 }
+
+#[test]
+fn test_capacity() {
+    let foo = Foo::with_capacity(2);
+    assert_eq!(foo.capacity(), 2);
+}
+
+#[test]
+fn test_clear() {
+    let mut foo = Foo::default();
+    foo.append(&mut vec![1, 2, 3]);
+    assert_eq!(foo.len(), 3);
+    foo.clear();
+    assert_eq!(foo.len(), 0);
+}
+
+#[test]
+fn test_len_is_empty() {
+    let mut foo = Foo::default();
+    assert_eq!(foo.len(), 0);
+    assert!(foo.is_empty());
+    foo.append(&mut vec![1, 2, 3]);
+    assert_eq!(foo.len(), 3);
+    assert_eq!(foo.is_empty(), false);
+}
