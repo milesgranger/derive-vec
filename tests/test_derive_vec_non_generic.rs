@@ -25,3 +25,10 @@ fn test_append() {
     foo.append(&mut vec![1, 2, 3]);
     assert_eq!(foo.values.len(), 3);
 }
+
+#[test]
+fn test_slice() {
+    let mut foo = Foo::default();
+    foo.append(&mut vec![1, 2, 3]);
+    assert_eq!(foo.as_slice(), &[1, 2, 3]);
+}

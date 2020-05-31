@@ -24,6 +24,9 @@ pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             fn append(&mut self, other: &mut Vec<#inner_vec_ident>) {
                 self.#field_name.append(other)
             }
+            fn as_slice(&self) -> &[#inner_vec_ident] {
+                self.#field_name.as_slice()
+            }
             fn push(&mut self, val: #inner_vec_ident) {
                 self.#field_name.push(val)
             }
