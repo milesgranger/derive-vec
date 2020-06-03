@@ -1,7 +1,6 @@
 # derive-vec
 
-This is a WIP, not many methods have been implemented thus far. 
-PRs welcome.
+Simply a learning avenue for proc-macros...
 
 [![CI](https://github.com/milesgranger/derive-vec/workflows/CI/badge.svg?branch=master)](https://github.com/milesgranger/derive-vec/actions?query=branch=master)
 
