@@ -33,6 +33,22 @@ pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             fn clear(&mut self) {
                 self.#field_name.clear()
             }
+            fn dedup(&mut self) {
+                self.#field_name.dedup()
+            }
+            fn dedup_by<F>(&mut self, same_bucket: F)
+                where
+                    F: FnMut(&mut #inner_vec_ident, &mut #inner_vec_ident) -> bool
+            {
+                self.#field_name.dedup_by(same_bucket)
+            }
+            fn dedup_by_key<F, K>(&mut self, key: F)
+                where
+                    F: FnMut(&mut #inner_vec_ident) -> K,
+                    K: PartialEq<K>
+            {
+                self.#field_name.dedup_by_key(key)
+            }
             fn len(&self) -> usize {
                 self.#field_name.len()
             }

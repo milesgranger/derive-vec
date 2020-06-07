@@ -49,6 +49,39 @@ fn test_clear() {
 }
 
 #[test]
+fn test_dedup() {
+    let mut foo = Foo::default();
+    let mut values = vec![1, 2, 3, 3];
+    foo.append(&mut values);
+    assert_eq!(&foo.values, &vec![1, 2, 3, 3]);
+    foo.dedup();
+    assert_eq!(&foo.values, &vec![1, 2, 3]);
+}
+
+#[test]
+fn test_dedup_by() {
+    #[derive(VecBehavior, Default)]
+    struct FooBar {
+        #[vec]
+        pub values: Vec<String>,
+    }
+    let mut foo = FooBar::default();
+    ["foo", "bar", "Bar", "baz", "bar"]
+        .iter()
+        .for_each(|v| foo.push(v.to_string()));
+    foo.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+    assert_eq!(foo.values, ["foo", "bar", "baz", "bar"]);
+}
+
+#[test]
+fn test_dedup_by_key() {
+    let mut foo = Foo::default();
+    [10, 20, 21, 30, 20].iter().for_each(|v| foo.push(*v));
+    foo.dedup_by_key(|i| *i / 10);
+    assert_eq!(foo.values, [10, 20, 30, 20]);
+}
+
+#[test]
 fn test_len_is_empty() {
     let mut foo = Foo::default();
     assert_eq!(foo.len(), 0);
