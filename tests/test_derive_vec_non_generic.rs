@@ -1,4 +1,6 @@
 use derive_vec::{VecBehavior, VecTrait};
+use std::ops::RangeBounds;
+use std::vec::Drain;
 
 #[derive(VecBehavior, Default)]
 struct Foo {
@@ -89,4 +91,17 @@ fn test_len_is_empty() {
     foo.append(&mut vec![1, 2, 3]);
     assert_eq!(foo.len(), 3);
     assert_eq!(foo.is_empty(), false);
+}
+
+#[test]
+fn test_drain() {
+    let mut foo = Foo::default();
+    foo.append(&mut vec![1, 2, 3]);
+
+    let u: Vec<_> = foo.drain(1..).collect();
+    assert_eq!(&foo.values, &[1]);
+    assert_eq!(&u, &[2, 3]);
+
+    foo.drain(..);
+    assert_eq!(&foo.values, &[]);
 }

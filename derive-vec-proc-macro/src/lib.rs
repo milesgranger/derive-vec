@@ -49,6 +49,11 @@ pub fn vec_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             {
                 self.#field_name.dedup_by_key(key)
             }
+            fn drain<R>(&mut self, range: R) -> Drain<#inner_vec_ident>
+                where R: RangeBounds<usize>
+            {
+                self.#field_name.drain(range)
+            }
             fn len(&self) -> usize {
                 self.#field_name.len()
             }
